@@ -1,0 +1,23 @@
+import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import morgan from "morgan";
+import { config } from "dotenv";
+import scheduleRoute from "./routes/schedule.js";
+import { connect } from "./utils/connectDb.js";
+import usersRoute from "./routes/user.js";
+import adminRoute from "./routes/admin.js";
+config();
+connect();
+const app = express();
+app.use(cors());
+app.use(cookieParser());
+app.use(morgan("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/schedule", scheduleRoute);
+app.use("/users", usersRoute);
+app.use("/admin", adminRoute);
+
+const port = process.env.PORT || 4000;
+app.listen(port, () => console.log("App is running on", port));
