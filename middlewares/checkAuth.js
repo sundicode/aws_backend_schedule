@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 const checkAdminAuth = (req, res, next) => {
-  const token = req.cookies.jwtToken;
+  const token = req.cookies.AdminToken;
   if (token) {
     jwt.verify(token, process.env.JWT_ADMIN_TOKEN, (err, decodedToken) => {
       console.log(decodedToken);
@@ -23,7 +23,7 @@ const checkAdminAuth = (req, res, next) => {
 };
 
 const checkUserAuth = (req, res, next) => {
-  const token = req.cookies.jwtToken;
+  const token = req.cookies.UserToken;
   if (token) {
     jwt.verify(token,process.env.JWT_USER_TOKEN, (err, decodedToken) => {
       // console.log(decodedToken);

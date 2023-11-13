@@ -4,6 +4,7 @@ const registerSchema = Joi.object({
   email: Joi.string().lowercase().email(),
   password: Joi.string().min(8).required(),
   matricule: Joi.string().uppercase(),
+  department: Joi.string().uppercase(),
   image: Joi.string(),
 });
 

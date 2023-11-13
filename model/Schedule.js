@@ -1,8 +1,11 @@
+// import { string } from "joi";
+import moment from "moment";
 import { Schema, model } from "mongoose";
 const scheduleSchema = new Schema({
-  date: { type: Date, required: true },
-  time: { type: Date, required: true },
+  date: { type:String, required: true, unique: true },
+  time: { type: String, required: true },
   numberOfPatients: { type: Number, required: true },
-  patient: [{ type: Schema.Types.ObjectId, rel: "UserInfo" }],
+  patient: [{ type: Schema.Types.ObjectId, ref: "UserInfo", populate: true }],
 });
-export default model("Schedule", scheduleSchema);
+const userSchema = model("Schedule", scheduleSchema);
+export default userSchema;

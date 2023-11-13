@@ -8,7 +8,6 @@ import {
 import { checkAdminAuth, checkUserAuth } from "../middlewares/checkAuth.js";
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { v4 } from "uuid";
 
 const storage = multer.memoryStorage();
 // const storage = multer.diskStorage({
@@ -36,7 +35,6 @@ const mutltipleUploadHandler = fileUploadHandler.fields([
   { name: "schoolfeesReciept", maxCount: 1 },
 ]);
 
-
 const router = Router();
 //@middleware multer
 router.use((err, req, res, next) => {
@@ -55,8 +53,9 @@ router.use((err, req, res, next) => {
   }
 });
 // @add schedule @admin route
-router.post("/create", createSchedule);
+router.post("/create", checkAdminAuth, createSchedule);
 //@ admin route
+
 router.get("/", getSchedule);
 //@ admin route
 router.get("/:matricule", checkAdminAuth, getScheduleByStudentMatricule);

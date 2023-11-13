@@ -1,59 +1,123 @@
 import expressAsyncHandler from "express-async-handler";
 import Schedule from "../model/Schedule.js";
+import mongoose from "mongoose";
 import UserInfo from "../model/UserInfo.js";
 import { s3Uploadv2 } from "../utils/awsConfig.js";
+import moment from "moment";
 
 //@create Schedule
 const createSchedule = expressAsyncHandler(async (req, res) => {
   const { date, time, maxNumber } = req.body;
-  const existingSchedule = await Schedule.findOne({ date: date});
-  if (existingSchedule)
-    return res.status(400).json({ message: "Schedule already Exist" });
-  if (!date || !time)
-    return res.status(400).json({ message: "All field required" });
-  const newSchedule = new Schedule({ date, time, numberOfPatients: maxNumber });
+  const existingSchedule = await Schedule.findOne({ date: date });
+  if (existingSchedule) {
+    res.status(400);
+    throw new Error("Schedule already Exist");
+  }
+  if (!date || !time) {
+    res.status(400);
+    throw new Error("All feilds are required");
+  }
+  const newSchedule = new Schedule({
+    date: date,
+    time,
+    numberOfPatients: maxNumber,
+  });
   const schedule = await newSchedule.save();
-  if (!schedule)
-    return res.status(500).json({ message: "Failed to create schedule" });
+  if (!schedule) {
+    res.status(500);
+    throw new Error("Schedule could not be created");
+  }
   res.status(201).json({ message: "Schedule created successfully", schedule });
 });
 
 //@get todays schedule
 const getSchedule = expressAsyncHandler(async (req, res) => {
-  const today = new Date().toDateString();
-  const todaysSchedule = await Schedule.findOne({ date: today });
+  const date = new Date().toISOString().split("-");
+  const year = date[0];
+  const month = date[1];
+  const day = date[2].split("T")[0];
+  const currentDate = `${year}-${month}-${day}`;
+  console.log(currentDate);
+
+  console.log(currentDate);
+  const popObj = {
+    path: "patient",
+    populate: {
+      path: "user",
+      select: "username  matricule department email",
+    },
+  };
+
+  const todaysSchedule = await Schedule.findOne({ date: currentDate }).populate(
+    popObj
+  );
   res.status(200).json({ schedule: todaysSchedule });
 });
 const getScheduleByStudentMatricule = expressAsyncHandler(async (req, res) => {
+  const date = new Date().toISOString().split("-");
+  const year = date[0];
+  const month = date[1];
+  const day = date[2].split("T")[0];
+  const currentDate = `${year}-${month}-${day}`;
   const { matricule } = req.params;
-  const schedules = await Schedule.find({}).populate("users userinfos");
-  const scheduleInfos = schedules.flatMap();
+  const popObj = {
+    path: "patient",
+    populate: {
+      path: "user",
+      select: "username  matricule department email",
+    },
+  };
+  const todaysSchedule = await Schedule.findOne({
+    date: currentDate,
+  }).populate(popObj);
+  const singleUser = todaysSchedule.patient.find(
+    (user) => user.user.matricule == matricule
+  );
+  res.status(200).json({ user: singleUser });
 });
+
 const bookSchedule = expressAsyncHandler(async (req, res) => {
-  const { time, date, id } = req.body;
+  const { id } = req.body;
   const { userId } = req.user;
-  const schedule = await Schedule.findOne({ _id:id});
-  if (!schedule) return res.status(400).json({ message: "No schedule found" });
+  const schedule = await Schedule.findOne({ _id: id });
   const maxStudents = schedule.numberOfPatients;
-  const { medicalReciept, schoolfeesReciept } = req.files;
-  const files = [medicalReciept[0], schoolfeesReciept[0]];
-  const results = await s3Uploadv2(files);
-  if (schedule.patient.length === maxStudents)
+  // Check if the schedule is full before uploading the files to S3.
+  if (schedule.patient.length >= maxStudents) {
     return res
       .status(400)
       .json({ message: "All Spaces taken book for another day" });
+  }
 
+  // Upload both files to S3 in parallel.
+  const { medicalReciept, schoolfeesReciept } = req.files;
+  const files = [medicalReciept[0], schoolfeesReciept[0]];
+  const results = await s3Uploadv2(files);
+  // const results
+
+  // Create the new user info object.
   const userInfo = new UserInfo({
     user: userId,
     medicalReciet: results[0].Location,
     schoolfeeReciet: results[1].Location,
   });
 
-  schedule.patient.push(userInfo);
-  await userInfo.save();
-  await schedule.save();
-  res.status(201).json({ schedule });
+  // Save the schedule and user info object in a single transaction.
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    await userInfo.save({ session });
+    schedule.patient.push(userInfo._id);
+    await schedule.save({ session });
+    await session.commitTransaction();
+    session.endSession();
+    res.status(201).json({ schedule });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 });
+
 export {
   createSchedule,
   getSchedule,

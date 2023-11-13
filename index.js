@@ -7,6 +7,7 @@ import scheduleRoute from "./routes/schedule.js";
 import { connect } from "./utils/connectDb.js";
 import usersRoute from "./routes/user.js";
 import adminRoute from "./routes/admin.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 config();
 connect();
 const app = express();
@@ -18,6 +19,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/schedule", scheduleRoute);
 app.use("/users", usersRoute);
 app.use("/admin", adminRoute);
-
+app.use(errorHandler);
 const port = process.env.PORT || 4000;
 app.listen(port, () => console.log("App is running on", port));

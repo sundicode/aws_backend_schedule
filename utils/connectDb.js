@@ -4,6 +4,7 @@ export const connect = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_CONNECT);
     console.log(conn.connection.name);
     console.log("connected");
+    return conn.connection;
   } catch (error) {
     console.log(error.message);
     console.log("not connected");
