@@ -14,7 +14,6 @@ const adminSignUp = expressAsyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("All feilds are required");
   }
-
   //->Joi validation
   const { error, value } = adminSignupSchema.validate(req.body);
   if (error) {
