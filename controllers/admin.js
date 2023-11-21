@@ -1,6 +1,7 @@
 import expressAsyncHandler from "express-async-handler";
 import Admin from "../model/Admin.js";
 import bcrypt from "bcrypt";
+
 import { adminLogoutToken, signAdminToken } from "../utils/generateToken.js";
 import {
   adminSigninSchema,
@@ -37,7 +38,8 @@ const adminSignUp = expressAsyncHandler(async (req, res) => {
     res.status(500);
     throw new Error("error creating Admin");
   }
-  signAdminToken(admin._id, admin.email, admin.role, res);
+  req.cookies("hello", "hello");
+  // signAdminToken(admin._id, admin.email, admin.role, res);
   res.status(201).json({ message: "Admin created successfully" });
 });
 
@@ -56,13 +58,14 @@ const adminSignIn = expressAsyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Wrong email or password");
   }
-  if (error) return res.status(400).json({ message: error.message[0] });
-  const decryptedPassword = await bcrypt.compare(password, admin.password);
+  if (error) return res.status(400).json({ message: error.message });
+  const decryptedPassword = bcrypt.compare(password, admin.password);
   if (!decryptedPassword) {
     res.status(400);
     throw new Error("Wrong email or password");
   }
-  signAdminToken(admin._id, admin.email, admin.role, res);
+  const token = signAdminToken(admin._id, admin.email, admin.role, res);
+  console.log(token);
   res.status(200).json({ message: "user logged in sucessfully" });
 });
 
@@ -71,4 +74,21 @@ const adminLogout = expressAsyncHandler(async (req, res) => {
   res.status(200).json({ message: "User logged out successfully" });
 });
 
-export { adminLogout, adminSignIn, adminSignUp };
+const adminProfile = expressAsyncHandler(async (req, res) => {
+  const adminId = req.admin.adminId;
+  if (adminId == null) {
+    res.status(401);
+    throw new Error("You are not permited");
+  }
+  const admin = await Admin.findById({ _id: adminId }).select("-password");
+  res.status(200).json({ admin });
+});
+
+const adminfProfileSettings = expressAsyncHandler(async (req, res) => {});
+export {
+  adminLogout,
+  adminSignIn,
+  adminSignUp,
+  adminProfile,
+  adminfProfileSettings,
+};

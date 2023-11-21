@@ -2,12 +2,12 @@ import { Router } from "express";
 import {
   bookSchedule,
   createSchedule,
-  getSchedule,
+  getScheduleAdmin,
   getScheduleByStudentMatricule,
+  getScheduleUser,
 } from "../controllers/schedule.js";
 import { checkAdminAuth, checkUserAuth } from "../middlewares/checkAuth.js";
 import multer from "multer";
-import multerS3 from "multer-s3";
 
 const storage = multer.memoryStorage();
 // const storage = multer.diskStorage({
@@ -55,9 +55,10 @@ router.use((err, req, res, next) => {
 // @add schedule @admin route
 router.post("/create", checkAdminAuth, createSchedule);
 //@ admin route
-
-router.get("/", getSchedule);
+router.get("/admin", checkAdminAuth, getScheduleAdmin);
 //@ admin route
+router.get("/users", checkUserAuth, getScheduleUser);
+//@user route
 router.get("/:matricule", checkAdminAuth, getScheduleByStudentMatricule);
 //@user route
 router.post("/book", checkUserAuth, mutltipleUploadHandler, bookSchedule);

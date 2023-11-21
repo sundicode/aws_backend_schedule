@@ -13,7 +13,6 @@ const signAccessToken = (userId, matricule, role, res) => {
   res.cookie("UserToken", token, {
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24,
-    sameSite:None
   });
 };
 
@@ -31,18 +30,17 @@ const signAdminToken = (adminId, email, role, res) => {
   res.cookie("AdminToken", token, {
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24,
-    sameSite:None
   });
 };
 const userLogoutToken = (res) => {
-  res.cookie("UserToken", "", {
+  res.cookie("", "", {
     httpOnly: true,
     maxAge: new Date(),
   });
 };
 
 const adminLogoutToken = (res) => {
-  res.cookie("AdminToken", "", {
+  res.cookie("", "", {
     httpOnly: true,
     maxAge: new Date(),
   });

@@ -36,7 +36,7 @@ const userSignUp = expressAsyncHandler(async (req, res) => {
     res.status(500);
     throw new Error("user creating Admin");
   }
-  signAccessToken(user._id, user.matricule, user.role, res);
+  // signAccessToken(user._id, user.matricule, user.role, res);
   res.status(201).json({ message: "User created successfully" });
 });
 
@@ -49,6 +49,7 @@ const userSignIn = expressAsyncHandler(async (req, res) => {
   }
   //->Joi validation
   const { error, value } = loginSchema.validate(req.body);
+  console.log(value.matricule);
   const user = await User.findOne({ matricule: value.matricule });
   //->existing user
   if (!user) {
@@ -59,6 +60,7 @@ const userSignIn = expressAsyncHandler(async (req, res) => {
     res.status(400);
     throw new Error(error.message);
   }
+  
   const decryptedPassword = await bcrypt.compare(password, user.password);
   if (!decryptedPassword) {
     res.status(400);
@@ -73,5 +75,6 @@ const userLogout = expressAsyncHandler(async (req, res) => {
   userLogoutToken(res);
   res.status(200).json({ message: "user logged out sucessfully" });
 });
+
 
 export { userLogout, userSignIn, userSignUp };

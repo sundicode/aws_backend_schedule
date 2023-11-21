@@ -10,7 +10,7 @@ const registerSchema = Joi.object({
 
 const loginSchema = Joi.object({
   password: Joi.string().min(8).required(),
-  matricule: Joi.string(),
+  matricule: Joi.string().uppercase(),
 });
 
 const adminSignupSchema = Joi.object({

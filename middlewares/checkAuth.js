@@ -3,7 +3,6 @@ const checkAdminAuth = (req, res, next) => {
   const token = req.cookies.AdminToken;
   if (token) {
     jwt.verify(token, process.env.JWT_ADMIN_TOKEN, (err, decodedToken) => {
-      console.log(decodedToken);
       if (err) {
         return res.status(401).json({ message: "Not authorized" });
       } else {
@@ -25,8 +24,7 @@ const checkAdminAuth = (req, res, next) => {
 const checkUserAuth = (req, res, next) => {
   const token = req.cookies.UserToken;
   if (token) {
-    jwt.verify(token,process.env.JWT_USER_TOKEN, (err, decodedToken) => {
-      // console.log(decodedToken);
+    jwt.verify(token, process.env.JWT_USER_TOKEN, (err, decodedToken) => {
       if (err) {
         return res.status(401).json({ message: "Not authorized" });
       } else {

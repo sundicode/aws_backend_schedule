@@ -3,12 +3,11 @@ import Schedule from "../model/Schedule.js";
 import mongoose from "mongoose";
 import UserInfo from "../model/UserInfo.js";
 import { s3Uploadv2 } from "../utils/awsConfig.js";
-import moment from "moment";
 
 //@create Schedule
 const createSchedule = expressAsyncHandler(async (req, res) => {
   const { date, time, maxNumber } = req.body;
-  const existingSchedule = await Schedule.findOne({ date: date });
+  const existingSchedule = await Schedule.findOne({ time: time });
   if (existingSchedule) {
     res.status(400);
     throw new Error("Schedule already Exist");
@@ -31,7 +30,7 @@ const createSchedule = expressAsyncHandler(async (req, res) => {
 });
 
 //@get todays schedule
-const getSchedule = expressAsyncHandler(async (req, res) => {
+const getScheduleAdmin = expressAsyncHandler(async (req, res) => {
   const date = new Date().toISOString().split("-");
   const year = date[0];
   const month = date[1];
@@ -48,7 +47,30 @@ const getSchedule = expressAsyncHandler(async (req, res) => {
     },
   };
 
-  const todaysSchedule = await Schedule.findOne({ date: currentDate }).populate(
+  const todaysSchedule = await Schedule.find({ date: currentDate }).populate(
+    popObj
+  );
+  res.status(200).json({ schedule: todaysSchedule });
+});
+
+const getScheduleUser = expressAsyncHandler(async (req, res) => {
+  const date = new Date().toISOString().split("-");
+  const year = date[0];
+  const month = date[1];
+  const day = date[2].split("T")[0];
+  const currentDate = `${year}-${month}-${day}`;
+  console.log(currentDate);
+
+  console.log(currentDate);
+  const popObj = {
+    path: "patient",
+    populate: {
+      path: "user",
+      select: "username  matricule department email",
+    },
+  };
+
+  const todaysSchedule = await Schedule.find({ date: currentDate }).populate(
     popObj
   );
   res.status(200).json({ schedule: todaysSchedule });
@@ -120,7 +142,8 @@ const bookSchedule = expressAsyncHandler(async (req, res) => {
 
 export {
   createSchedule,
-  getSchedule,
+  getScheduleAdmin,
+  getScheduleUser,
   getScheduleByStudentMatricule,
   bookSchedule,
 };
