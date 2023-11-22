@@ -7,6 +7,7 @@ import {
   adminSigninSchema,
   adminSignupSchema,
 } from "../utils/usersValidate.js";
+import { s3Uploadv2 } from "../utils/awsConfig.js";
 const adminSignUp = expressAsyncHandler(async (req, res) => {
   const { phone, name, email, password } = req.body;
   const existingAdmin = await Admin.findOne({ email });
@@ -38,8 +39,6 @@ const adminSignUp = expressAsyncHandler(async (req, res) => {
     res.status(500);
     throw new Error("error creating Admin");
   }
-  req.cookies("hello", "hello");
-  // signAdminToken(admin._id, admin.email, admin.role, res);
   res.status(201).json({ message: "Admin created successfully" });
 });
 
@@ -84,7 +83,30 @@ const adminProfile = expressAsyncHandler(async (req, res) => {
   res.status(200).json({ admin });
 });
 
-const adminfProfileSettings = expressAsyncHandler(async (req, res) => {});
+const adminfProfileSettings = expressAsyncHandler(async (req, res) => {
+  const id = req.admin?.adminId;
+  if (id === null) {
+    res.status(404);
+    throw new Error("Admin not found do login");
+  }
+  const admin = await Admin.findById({ _id: id });
+  if (!admin) {
+    res.status(404);
+    throw new Error("Admin not found do login");
+  }
+  const { image } = req.files;
+  const files = [image[0]];
+
+  const result = await s3Uploadv2(files, "admin_image");
+  admin.image = result[0].Location;
+  // let query = {};
+  // for (const obj of req.body) {
+  //   query[obj.key] = obj.value;
+  // }
+  const updated = await Admin.updateOne({ _id: id }, { $set: { ...req.body } });
+  await admin.save();
+  res.json({ profile: updated });
+});
 export {
   adminLogout,
   adminSignIn,

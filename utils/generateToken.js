@@ -12,7 +12,7 @@ const signAccessToken = (userId, matricule, role, res) => {
   const token = jwt.sign(payload, secret, options);
   res.cookie("UserToken", token, {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24,
+    maxAge: 1000 * 60 * 60 * 24 * 8,
   });
 };
 
@@ -29,21 +29,15 @@ const signAdminToken = (adminId, email, role, res) => {
   const token = jwt.sign(payload, secret, options);
   res.cookie("AdminToken", token, {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24,
+    maxAge: 1000 * 60 * 60 * 24 * 8,
   });
 };
 const userLogoutToken = (res) => {
-  res.cookie("", "", {
-    httpOnly: true,
-    maxAge: new Date(),
-  });
+  res.clearCookie("UserToken");
 };
 
 const adminLogoutToken = (res) => {
-  res.cookie("", "", {
-    httpOnly: true,
-    maxAge: new Date(),
-  });
+  res.clearCookie("AdminToken");
 };
 
 export { signAccessToken, userLogoutToken, adminLogoutToken, signAdminToken };

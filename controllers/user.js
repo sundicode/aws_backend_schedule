@@ -3,6 +3,7 @@ import User from "../model/User.js";
 import bcrypt from "bcrypt";
 import { signAccessToken, userLogoutToken } from "../utils/generateToken.js";
 import { loginSchema, registerSchema } from "../utils/usersValidate.js";
+import { s3Uploadv2 } from "../utils/awsConfig.js";
 
 const userSignUp = expressAsyncHandler(async (req, res) => {
   const { matricule, name, email, password, department } = req.body;
@@ -34,7 +35,7 @@ const userSignUp = expressAsyncHandler(async (req, res) => {
   const user = await newUser.save();
   if (!user) {
     res.status(500);
-    throw new Error("user creating Admin");
+    throw new Error("user creating user");
   }
   // signAccessToken(user._id, user.matricule, user.role, res);
   res.status(201).json({ message: "User created successfully" });
@@ -60,7 +61,7 @@ const userSignIn = expressAsyncHandler(async (req, res) => {
     res.status(400);
     throw new Error(error.message);
   }
-  
+
   const decryptedPassword = await bcrypt.compare(password, user.password);
   if (!decryptedPassword) {
     res.status(400);
@@ -76,5 +77,23 @@ const userLogout = expressAsyncHandler(async (req, res) => {
   res.status(200).json({ message: "user logged out sucessfully" });
 });
 
+const updateUserProfile = expressAsyncHandler(async (req, res) => {
+  const id = req.user?.userId;
+  console.log(id);
+  if (id == null) {
+    res.status(400);
+    throw new Error("user not found do login");
+  }
+  const user = await User.findById({ _id: id });
+  if (user == null) {
+    res.status(400);
+    throw new Error("user not found do login");
+  }
+  const { image } = req.files;
+  const files = [image[0]];
+  const result = await s3Uploadv2(files, "users_image");
+  await User.updateOne({ _id: id }, { $set: { image: result[0].Location } });
+  res.status(200).json({ message: "profile updtaed with success" });
+});
 
-export { userLogout, userSignIn, userSignUp };
+export { userLogout, userSignIn, userSignUp, updateUserProfile };

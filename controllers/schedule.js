@@ -36,9 +36,7 @@ const getScheduleAdmin = expressAsyncHandler(async (req, res) => {
   const month = date[1];
   const day = date[2].split("T")[0];
   const currentDate = `${year}-${month}-${day}`;
-  console.log(currentDate);
 
-  console.log(currentDate);
   const popObj = {
     path: "patient",
     populate: {
@@ -59,9 +57,7 @@ const getScheduleUser = expressAsyncHandler(async (req, res) => {
   const month = date[1];
   const day = date[2].split("T")[0];
   const currentDate = `${year}-${month}-${day}`;
-  console.log(currentDate);
 
-  console.log(currentDate);
   const popObj = {
     path: "patient",
     populate: {
@@ -89,12 +85,15 @@ const getScheduleByStudentMatricule = expressAsyncHandler(async (req, res) => {
       select: "username  matricule department email",
     },
   };
+
   const todaysSchedule = await Schedule.findOne({
     date: currentDate,
   }).populate(popObj);
+
   const singleUser = todaysSchedule.patient.find(
     (user) => user.user.matricule == matricule
   );
+  console.log(singleUser);
   res.status(200).json({ user: singleUser });
 });
 
@@ -103,6 +102,7 @@ const bookSchedule = expressAsyncHandler(async (req, res) => {
   const { userId } = req.user;
   const schedule = await Schedule.findOne({ _id: id });
   const maxStudents = schedule.numberOfPatients;
+  req.session.scheduleId = id;
   // Check if the schedule is full before uploading the files to S3.
   if (schedule.patient.length >= maxStudents) {
     return res
@@ -113,7 +113,7 @@ const bookSchedule = expressAsyncHandler(async (req, res) => {
   // Upload both files to S3 in parallel.
   const { medicalReciept, schoolfeesReciept } = req.files;
   const files = [medicalReciept[0], schoolfeesReciept[0]];
-  const results = await s3Uploadv2(files);
+  const results = await s3Uploadv2(files, "uploads");
   // const results
 
   // Create the new user info object.
@@ -140,10 +140,36 @@ const bookSchedule = expressAsyncHandler(async (req, res) => {
   }
 });
 
+const getUsersScheduleBySession = expressAsyncHandler(async (req, res) => {
+  const { matricule } = req.user;
+  const popObj = {
+    path: "patient",
+    populate: {
+      path: "user",
+      select: "username  matricule department email",
+    },
+  };
+  if (req.session.scheduleId) {
+    const todaysSchedule = await Schedule.findById({
+      _id: req.session.scheduleId,
+    }).populate(popObj);
+
+    const singleUser = todaysSchedule.patient.find(
+      (user) => user.user.matricule == matricule
+    );
+    res.status(200).json({
+      user: singleUser.user,
+      date: todaysSchedule.date,
+      time: todaysSchedule.time,
+    });
+  }
+});
+
 export {
   createSchedule,
   getScheduleAdmin,
   getScheduleUser,
   getScheduleByStudentMatricule,
   bookSchedule,
+  getUsersScheduleBySession,
 };

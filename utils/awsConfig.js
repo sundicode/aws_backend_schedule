@@ -1,12 +1,12 @@
 import aws from "aws-sdk";
 import { v4 } from "uuid";
 import { PutObjectAclCommand, S3Client } from "@aws-sdk/client-s3";
-const s3Uploadv2 = async (files) => {
+const s3Uploadv2 = async (files,folder) => {
   const s3 = new aws.S3();
   const params = files.map((file) => {
     return {
       Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `uploads/${v4()}-${file.originalname}`,
+      Key: `${folder}/${v4()}-${file.originalname}`,
       Body: file.buffer,
     };
   });

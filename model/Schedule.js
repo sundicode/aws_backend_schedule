@@ -1,5 +1,3 @@
-// import { string } from "joi";
-import moment from "moment";
 import { Schema, model } from "mongoose";
 const scheduleSchema = new Schema({
   date: { type: String, required: true },

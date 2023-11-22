@@ -1,4 +1,9 @@
-var allowedOrigins = ["http://localhost:3000", "https://mediks-project.vercel.app/"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://mediks-project.vercel.app/",
+  "mediks.link",
+  "https://mediks-admin-dashboard.vercel.app/",
+];
 export const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);

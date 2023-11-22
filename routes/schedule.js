@@ -5,35 +5,10 @@ import {
   getScheduleAdmin,
   getScheduleByStudentMatricule,
   getScheduleUser,
+  getUsersScheduleBySession,
 } from "../controllers/schedule.js";
 import { checkAdminAuth, checkUserAuth } from "../middlewares/checkAuth.js";
-import multer from "multer";
-
-const storage = multer.memoryStorage();
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, "uploads");
-//   },
-//   filename: (req, file, cb) => {
-//     const { originalname } = file;
-//     cb(null, `${v4()}-${originalname}`);
-//   },
-// });
-
-// const storage = multer.memoryStorage();
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.split("/")[1] == "pdf") {
-    cb(null, true);
-  } else {
-    cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
-  }
-};
-const fileUploadHandler = multer({ storage, fileFilter });
-
-const mutltipleUploadHandler = fileUploadHandler.fields([
-  { name: "medicalReciept", maxCount: 1 },
-  { name: "schoolfeesReciept", maxCount: 1 },
-]);
+import { fileUploader } from "../utils/fileUpload.js";
 
 const router = Router();
 //@middleware multer
@@ -59,7 +34,20 @@ router.get("/admin", checkAdminAuth, getScheduleAdmin);
 //@ admin route
 router.get("/users", checkUserAuth, getScheduleUser);
 //@user route
+router.get("/my-schedule", checkUserAuth, getUsersScheduleBySession);
 router.get("/:matricule", checkAdminAuth, getScheduleByStudentMatricule);
 //@user route
-router.post("/book", checkUserAuth, mutltipleUploadHandler, bookSchedule);
+router.post(
+  "/book",
+  checkUserAuth,
+  fileUploader(
+    [
+      { name: "medicalReciept", maxCount: 1 },
+      { name: "schoolfeesReciept", maxCount: 1 },
+    ],
+    "pdf"
+  ),
+  bookSchedule
+);
+
 export default router;

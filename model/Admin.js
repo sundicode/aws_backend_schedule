@@ -4,11 +4,11 @@ const adminSchema = new Schema({
   email: { type: String, unique: true },
   password: { type: String },
   phone: { type: String },
-  address: { type: String },
-  post: { type: String },
+  address: { type: String, default: null },
+  post: { type: String, default: null },
   image: {
     type: String,
-    default: "",
+    default: null,
   },
   role: {
     type: String,
