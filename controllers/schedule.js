@@ -58,17 +58,7 @@ const getScheduleUser = expressAsyncHandler(async (req, res) => {
   const day = date[2].split("T")[0];
   const currentDate = `${year}-${month}-${day}`;
 
-  const popObj = {
-    path: "patient",
-    populate: {
-      path: "user",
-      select: "username  matricule department email",
-    },
-  };
-
-  const todaysSchedule = await Schedule.find({ date: currentDate }).populate(
-    popObj
-  );
+  const todaysSchedule = await Schedule.find({ date: currentDate }).select("_id time date")
   res.status(200).json({ schedule: todaysSchedule });
 });
 const getScheduleByStudentMatricule = expressAsyncHandler(async (req, res) => {
@@ -93,7 +83,6 @@ const getScheduleByStudentMatricule = expressAsyncHandler(async (req, res) => {
   const singleUser = todaysSchedule.patient.find(
     (user) => user.user.matricule == matricule
   );
-  console.log(singleUser);
   res.status(200).json({ user: singleUser });
 });
 
