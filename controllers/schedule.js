@@ -58,7 +58,9 @@ const getScheduleUser = expressAsyncHandler(async (req, res) => {
   const day = date[2].split("T")[0];
   const currentDate = `${year}-${month}-${day}`;
 
-  const todaysSchedule = await Schedule.find({ date: currentDate }).select("_id time date")
+  const todaysSchedule = await Schedule.find({ date: currentDate }).select(
+    "_id time date"
+  );
   res.status(200).json({ schedule: todaysSchedule });
 });
 const getScheduleByStudentMatricule = expressAsyncHandler(async (req, res) => {
@@ -154,6 +156,45 @@ const getUsersScheduleBySession = expressAsyncHandler(async (req, res) => {
   }
 });
 
+const deleteSchedule = expressAsyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const schedule = await Schedule.findById({ _id: id });
+  const schedulePatients = schedule.patient;
+  if (!schedule || schedule === null) {
+    res.status(404);
+    throw new Error("Scheduke not found");
+  }
+
+  if (schedulePatients.length > 0) {
+    res.status(400);
+    throw new Error(
+      "docunments already submited can only update time add date"
+    );
+  }
+
+  const deleteSchedule = await Schedule.deleteOne({ _id: id });
+  if (deleteSchedule.deletedCount > 0) {
+    res.status(200).json({ message: "schedule deleted" });
+  }
+  res.status(500).json({ message: "error occured delelting schedule" });
+});
+const updateSchedule = expressAsyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const schedule = await Schedule.findById({ _id: id });
+  if (!schedule || schedule === null) {
+    res.status(404);
+    throw new Error("Scheduke not found");
+  }
+  const updateSchedule = await Schedule.updateOne(
+    { _id: id },
+    { $set: { ...req.body } }
+  );
+
+  if (updateSchedule.upsertedCount > 0) {
+    res.status(200).json({ message: "schedule updated" });
+  }
+  res.status(500).json({ message: "error occured updating schedule" });
+});
 export {
   createSchedule,
   getScheduleAdmin,
@@ -161,4 +202,6 @@ export {
   getScheduleByStudentMatricule,
   bookSchedule,
   getUsersScheduleBySession,
+  updateSchedule,
+  deleteSchedule,
 };

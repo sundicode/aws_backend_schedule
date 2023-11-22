@@ -2,10 +2,12 @@ import { Router } from "express";
 import {
   bookSchedule,
   createSchedule,
+  deleteSchedule,
   getScheduleAdmin,
   getScheduleByStudentMatricule,
   getScheduleUser,
   getUsersScheduleBySession,
+  updateSchedule,
 } from "../controllers/schedule.js";
 import { checkAdminAuth, checkUserAuth } from "../middlewares/checkAuth.js";
 import { fileUploader } from "../utils/fileUpload.js";
@@ -35,6 +37,11 @@ router.get("/admin", checkAdminAuth, getScheduleAdmin);
 router.get("/users", checkUserAuth, getScheduleUser);
 //@user route
 router.get("/my-schedule", checkUserAuth, getUsersScheduleBySession);
+//@ admin route
+router.patch("/:id", checkAdminAuth, updateSchedule);
+//@ admin route
+router.delete("/:id", checkAdminAuth, deleteSchedule);
+//@ admin route
 router.get("/:matricule", checkAdminAuth, getScheduleByStudentMatricule);
 //@user route
 router.post(
