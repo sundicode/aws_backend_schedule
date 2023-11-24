@@ -21,15 +21,22 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+3
 app.use(
   session({
+    name: "user-schedule",
     secret: process.env.SECRET_KEY,
     resave: false,
-    saveUninitialized: true,
-    cookie: { httpOnly: true, secure: false },
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 2_592_000_000, // 30 days
+      httpOnly: process.env.NODE_ENV === "production" ? false : true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production" ? true : false,
+    },
     store: MongoStore.create({
       mongoUrl: process.env.MONGODB_CONNECT,
-      dbName: "user-schedule-session",
+      dbName: "medicks",
     }),
   })
 );

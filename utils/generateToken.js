@@ -11,7 +11,9 @@ const signAccessToken = (userId, matricule, role, res) => {
   const secret = process.env.JWT_USER_TOKEN;
   const token = jwt.sign(payload, secret, options);
   res.cookie("UserToken", token, {
-    httpOnly: true,
+    httpOnly: process.env.NODE_ENV === "production" ? false : true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production" ? true : false,
     maxAge: 1000 * 60 * 60 * 24 * 8,
   });
 };
@@ -28,7 +30,9 @@ const signAdminToken = (adminId, email, role, res) => {
   const secret = process.env.JWT_ADMIN_TOKEN;
   const token = jwt.sign(payload, secret, options);
   res.cookie("AdminToken", token, {
-    httpOnly: true,
+    httpOnly: process.env.NODE_ENV === "production" ? false : true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production" ? true : false,
     maxAge: 1000 * 60 * 60 * 24 * 8,
   });
 };
